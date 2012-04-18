@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="280" height="43" 
+			   maxWidth="280" maxHeight="43"
+			   applicationComplete="onApplicationCompleted(event)"
+			   >
+	<fx:Style source="mccm_countdown.css"/>
+	<s:states>
+		<s:State name="defaultState" />
+		<s:State name="finishedState" />
+	</s:states>
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.utils.StringUtil;
+			
+			import spark.effects.Fade;
+			
+			import util.CounterFinishedEvent;
+			import util.CounterUtil;
+			
+			private static const TICKS:Number = 1000;
+			private var timer:Timer = new Timer(TICKS, 0);
+			private var pattern:String = "Tage: {0} Stunden: {1} Min: {2} Sek: {3}";
+			
+			private var registerStartDate:Date = new Date(2012,3,6,16,03,33,0);
+			private var fadeEffect:Fade = new Fade();
+			
+			private var ctr:CounterUtil = null;
+			
+			protected function onApplicationCompleted(event:FlexEvent):void
+			{	
+				//var millis:Number = Date.parse("2012/04/13 19:20");
+				var millis:Number = Date.parse(FlexGlobals.topLevelApplication.parameters.registrationStartDate);
+	/*			var siteURL:String = FlexGlobals.topLevelApplication.parameters.siteURL;
+				
+				if(siteURL == null) {
+					throw Error("RegisterCountdown - No siteURL passed!");
+				}
+				*/
+				/*
+				var millis:Number = registerStartDate.time;
+				var siteURL:String = "http://www.google.at";
+				if(siteURL == null) {
+					throw Error("RegisterCountdown - No siteURL passed!");
+				}
+				*/
+				
+				if(isNaN(millis) == false) {
+					fadeEffect.alphaFrom = 1;
+					fadeEffect.alphaTo = 0.5;
+					fadeEffect.duration = TICKS;
+					fadeEffect.target = countdownLbl;
+					
+					//ctr = new CounterUtil(registerStartDate);
+					var initDate:Date = new Date();
+					initDate.time = millis;
+					ctr = new CounterUtil(initDate);
+					ctr.addEventListener(CounterUtil.FINISHED, onCounterFinished);
+					timer.addEventListener(TimerEvent.TIMER, onTimerTick);
+					timer.start();
+				} else {
+					throw Error("RegisterCountdown - passed date has invalid format. Passed: "+FlexGlobals.topLevelApplication.parameters.registrationStartDate);
+				}
+			}
+			private function onTimerTick(event:TimerEvent):void 
+			{
+				ctr.doTick();
+				countdownLbl.text = StringUtil.substitute(pattern, ctr.days, ctr.hours, ctr.minutes, ctr.seconds);
+				fadeEffect.play();
+			}
+			
+			protected function onCounterFinished(event:CounterFinishedEvent):void
+			{
+				this.currentState = "finishedState"
+				this.timer.stop();
+			}
+			
+			protected function registerAnchorClick(event:MouseEvent):void
+			{
+				ExternalInterface.call('register');
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Label includeIn="defaultState" x="3" y="10" width="130" color="#FFFFFF" fontSize="9"
+			 text="Rennanmeldungen möglich in:"/>	
+	<s:Label id="countdownLbl" includeIn="defaultState" x="4" y="25" width="266" height="9"
+			 color="#FFFFFF" fontSize="9"/>
+	
+	<s:Label includeIn="finishedState" x="3" y="10" width="179" color="#FFFFFF" fontSize="9"
+			 text="Rennanmeldungen jetzt möglich:"/>
+	<s:Label id="registerAnchorLbl" includeIn="finishedState" x="4" y="25" width="266" height="8"
+			 color="#E40C0C" fontSize="9" text="Hier gehts zu den Anmeldungen" click="registerAnchorClick(event)" buttonMode="true"/>
+</s:Application>
