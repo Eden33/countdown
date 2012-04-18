@@ -1,7 +1,6 @@
 package util
 {
-	import flash.events.EventDispatcher;	
-	import spark.formatters.DateTimeFormatter;
+	import flash.events.EventDispatcher;
 
 	[Event(name="finished", type="util.CounterFinishedEvent")]
 	public class CounterUtil extends EventDispatcher
@@ -26,10 +25,6 @@ package util
 		{
 			if(value <= 0 && _minutes <= 0 && _hours <= 0 && days <= 0)
 			{
-				var formatter:DateTimeFormatter = new DateTimeFormatter();
-				formatter.dateTimePattern = "h:mm:ss";
-				var now:Date = new Date();
-				trace("Dispatch Counter finished event: "+formatter.format(now));
 				dispatchEvent(new CounterFinishedEvent(CounterUtil.FINISHED));
 			}
 			_seconds = value;

@@ -1,5 +1,13 @@
 /* CSS file */
-@namespace s "library://ns.adobe.com/flex/spark";
-@namespace mx "library://ns.adobe.com/flex/mx";
-s|Application { backgroundAlpha: 0; }
-/*s|Application { backgroundAlpha: 1; backgroundColor: #000; } */
+Application { backgroundAlpha: 0; }
+/*  Application { backgroundAlpha: 1; backgroundColor: #000; } */ 
+VBox {
+	paddingLeft: 4;
+	paddingTop: 4;
+	fontSize: 9;
+	verticalGap: 0;
+	textAlign: left;
+}
+Label {
+	color: #FFF;
+}

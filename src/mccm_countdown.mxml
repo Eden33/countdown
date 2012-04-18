@@ -1,100 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
-			   xmlns:s="library://ns.adobe.com/flex/spark"
-			   xmlns:mx="library://ns.adobe.com/flex/mx"
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
 			   width="280" height="43" 
-			   maxWidth="280" maxHeight="43"
+			   maxWidth="280" maxHeight="43" 
+			   paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+			   initialize="onInitialize(event)"
 			   applicationComplete="onApplicationCompleted(event)"
+			   verticalScrollPolicy="off"
+			   horizontalScrollPolicy="off"
 			   >
-	<fx:Style source="mccm_countdown.css"/>
-	<s:states>
-		<s:State name="defaultState" />
-		<s:State name="finishedState" />
-	</s:states>
-	<fx:Script>
-		<![CDATA[
-			import mx.controls.Alert;
-			import mx.core.FlexGlobals;
-			import mx.events.FlexEvent;
-			import mx.utils.StringUtil;
-			
-			import spark.effects.Fade;
-			
-			import util.CounterFinishedEvent;
-			import util.CounterUtil;
-			
-			private static const TICKS:Number = 1000;
-			private var timer:Timer = new Timer(TICKS, 0);
-			private var pattern:String = "Tage: {0} Stunden: {1} Min: {2} Sek: {3}";
-			
-			private var registerStartDate:Date = new Date(2012,3,6,16,03,33,0);
-			private var fadeEffect:Fade = new Fade();
-			
-			private var ctr:CounterUtil = null;
-			
-			protected function onApplicationCompleted(event:FlexEvent):void
-			{	
-				//var millis:Number = Date.parse("2012/04/13 19:20");
-				var millis:Number = Date.parse(FlexGlobals.topLevelApplication.parameters.registrationStartDate);
-	/*			var siteURL:String = FlexGlobals.topLevelApplication.parameters.siteURL;
+	<mx:Style source="mccm_countdown.css"/>
+	<mx:states>
+		<mx:State name="{FINISHED_STATE}">
+			<mx:RemoveChild target="{ctrBox}" />
+			<mx:SetProperty target="{ctrBoxFinished}" name="visible" value="true" />
+		</mx:State>
+	</mx:states>
+	<mx:Script>
+			<![CDATA[
+				import mx.controls.Alert;
+				import mx.core.Application;
+				import mx.effects.Blur;
+				import mx.effects.Dissolve;
+				import mx.effects.Fade;
+				import mx.events.FlexEvent;
+				import mx.utils.StringUtil;
 				
-				if(siteURL == null) {
-					throw Error("RegisterCountdown - No siteURL passed!");
-				}
-				*/
-				/*
-				var millis:Number = registerStartDate.time;
-				var siteURL:String = "http://www.google.at";
-				if(siteURL == null) {
-					throw Error("RegisterCountdown - No siteURL passed!");
-				}
-				*/
+				import util.CounterFinishedEvent;
+				import util.CounterUtil;
 				
-				if(isNaN(millis) == false) {
-					fadeEffect.alphaFrom = 1;
-					fadeEffect.alphaTo = 0.5;
-					fadeEffect.duration = TICKS;
-					fadeEffect.target = countdownLbl;
+				private static const TICKS:Number = 1000;
+				private static const FINISHED_STATE:String = "finished";
+				private var timer:Timer = new Timer(TICKS, 0);
+				
+				private var day_singular:String = "{0} Tag ";
+				private var day_plural:String = "{0} Tagen ";
+				
+				private var hour_singular:String = "{1} Stunde ";
+				private var hour_plural:String = "{1} Stunden ";
+				
+				private var minute_singular:String = "{2} Minute ";
+				private var minute_plural:String = "{2} Minuten ";
+				
+				private var second_singular:String = "{3} Sekunde";
+				private var second_plural:String = "{3} Sekunden";
+				
+				private var fadeEffect:Fade = new Fade();
+				private var ctr:CounterUtil = null;
+				
+				protected function onApplicationCompleted(event:FlexEvent):void
+				{	
+					var millis:Number = Date.parse(Application.application.parameters.registrationStartDate);
+					/* millis = Date.parse("2012/04/19 01:14"); */
 					
-					//ctr = new CounterUtil(registerStartDate);
-					var initDate:Date = new Date();
-					initDate.time = millis;
-					ctr = new CounterUtil(initDate);
-					ctr.addEventListener(CounterUtil.FINISHED, onCounterFinished);
-					timer.addEventListener(TimerEvent.TIMER, onTimerTick);
-					timer.start();
-				} else {
-					throw Error("RegisterCountdown - passed date has invalid format. Passed: "+FlexGlobals.topLevelApplication.parameters.registrationStartDate);
+					if(isNaN(millis) == false) {
+						fadeEffect.alphaFrom = 1;
+						fadeEffect.alphaTo = 0.4;
+						fadeEffect.duration = TICKS;
+						fadeEffect.target = countdownLbl;
+						
+						//ctr = new CounterUtil(registerStartDate);
+						var initDate:Date = new Date();
+						initDate.time = millis;
+						ctr = new CounterUtil(initDate);
+						ctr.addEventListener(CounterUtil.FINISHED, onCounterFinished);
+						timer.addEventListener(TimerEvent.TIMER, onTimerTick);
+						timer.start();
+					} else {
+						throw Error("RegisterCountdown - passed date has invalid format. Passed: "+Application.application.parameters.registrationStartDate);
+					}
 				}
-			}
-			private function onTimerTick(event:TimerEvent):void 
-			{
-				ctr.doTick();
-				countdownLbl.text = StringUtil.substitute(pattern, ctr.days, ctr.hours, ctr.minutes, ctr.seconds);
-				fadeEffect.play();
-			}
-			
-			protected function onCounterFinished(event:CounterFinishedEvent):void
-			{
-				this.currentState = "finishedState"
-				this.timer.stop();
-			}
-			
-			protected function registerAnchorClick(event:MouseEvent):void
-			{
-				ExternalInterface.call('register');
-			}
-			
-		]]>
-	</fx:Script>
+				private function onTimerTick(event:TimerEvent):void 
+				{
+					ctr.doTick();
+					var pattern:String = "";
+					//not nice but it works ; )
+					if(ctr.days != 1)
+					{
+						pattern += day_plural;
+					}
+					else
+					{
+						pattern += day_singular;
+					}
+					if(ctr.hours != 1)
+					{
+						pattern += hour_plural;
+					}
+					else
+					{
+						pattern += hour_singular;
+					}
+					if(ctr.minutes != 1)
+					{
+						pattern += minute_plural;
+					}
+					else
+					{
+						pattern += minute_singular;
+					}
+					if(ctr.seconds != 1)
+					{
+						pattern += second_plural;
+					}
+					else
+					{
+						pattern += second_singular;
+					}
+					countdownLbl.text = StringUtil.substitute(pattern, ctr.days, ctr.hours, ctr.minutes, ctr.seconds);
+					fadeEffect.play();
+				}
+				
+				protected function onCounterFinished(event:CounterFinishedEvent):void
+				{
+					this.currentState = FINISHED_STATE;
+					this.timer.stop();
+				}
+				
+				protected function registerAnchorClick(event:MouseEvent):void
+				{
+					ExternalInterface.call('register');
+				}
+				
+				protected function onInitialize(event:FlexEvent):void
+				{
+					//needed for fade effect to take effect
+					//The first alternative is really clever: Apply the BlurFilter to the text before attempting 
+					//to fade it in and out. When you apply a BlurFilter to text, Flash Player converts the text to 
+					//a bitmap. Once the text is a bitmap, it can be faded in and out with the Fade effect. 
+					//So instead of actually blurring the text with the BlurFilter, you just apply the BlurFilter 
+					//with some dummy settings (0,0,0), and then you can fade the text with the Fade effect.
+					var blurFilter:BlurFilter = new BlurFilter(0,0,0);
+					var filters:Array = new Array();
+					filters.push(blurFilter);
+					this.countdownLbl.filters = filters;
+				}
+			]]>
+	</mx:Script>
 	
-	<s:Label includeIn="defaultState" x="3" y="10" width="130" color="#FFFFFF" fontSize="9"
-			 text="Rennanmeldungen möglich in:"/>	
-	<s:Label id="countdownLbl" includeIn="defaultState" x="4" y="25" width="266" height="9"
-			 color="#FFFFFF" fontSize="9"/>
-	
-	<s:Label includeIn="finishedState" x="3" y="10" width="179" color="#FFFFFF" fontSize="9"
-			 text="Rennanmeldungen jetzt möglich:"/>
-	<s:Label id="registerAnchorLbl" includeIn="finishedState" x="4" y="25" width="266" height="8"
-			 color="#E40C0C" fontSize="9" text="Hier gehts zu den Anmeldungen" click="registerAnchorClick(event)" buttonMode="true"/>
-</s:Application>
+	<mx:VBox id="ctrBox"  width="100%" height="100%"
+			 verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Label width="100%" text="Rennanmeldungen möglich in:"/>	
+		<mx:Label id="countdownLbl" width="100%" />	
+	</mx:VBox>
+	<mx:VBox id="ctrBoxFinished" width="100%" height="100%" visible="false" 
+			 verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Label width="100%" text="Rennanmeldungen jetzt möglich:"/>
+		<mx:Label id="registerAnchorLbl" color="#E40C0C" text="Hier gehts zu den Anmeldungen" 
+				  click="registerAnchorClick(event)" buttonMode="true" mouseChildren="false"/>
+	</mx:VBox>
+</mx:Application>
